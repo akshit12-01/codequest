@@ -1,0 +1,144 @@
+@import "tailwindcss";
+
+/* ============================================================
+   CodeQuest design tokens — "System Window" RPG interface
+   Dark-only theme. Space Grotesk for UI, JetBrains Mono for
+   every number, stat, and code-like value.
+   ============================================================ */
+
+@theme {
+  --color-bg: #0a0b10;
+  --color-surface: #12131c;
+  --color-surface-2: #171928;
+  --color-surface-3: #1d2033;
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-strong: rgba(255, 255, 255, 0.16);
+
+  --color-text: #edeff7;
+  --color-text-muted: #9da2bd;
+  --color-text-faint: #8389a6;
+
+  --color-primary: #8c7cff;
+  --color-primary-soft: #a89bff;
+  --color-primary-dim: #362f6e;
+
+  --color-success: #3ddc97;
+  --color-warning: #ffb454;
+  --color-danger: #ff5c7a;
+  --color-info: #5b9fff;
+
+  --color-skill-html: #ff8a5c;
+  --color-skill-css: #5cc8ff;
+  --color-skill-javascript: #f7cb53;
+  --color-skill-typescript: #5b9fff;
+  --color-skill-node: #3ddc97;
+  --color-skill-express: #9fb0d9;
+  --color-skill-mongodb: #5fbf6f;
+  --color-skill-jwt: #b389ff;
+  --color-skill-docker: #4fd1e8;
+  --color-skill-redis: #ff5c7a;
+  --color-skill-git: #c9cdd6;
+  --color-skill-github: #c9cdd6;
+  --color-skill-sql: #6c8cff;
+  --color-skill-postgresql: #6c8cff;
+
+  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --radius-panel: 1.25rem;
+}
+
+* {
+  border-color: var(--color-border);
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-display);
+  min-height: 100dvh;
+  background-image:
+    radial-gradient(60rem 40rem at -10% -10%, rgba(140, 124, 255, 0.10), transparent 60%),
+    radial-gradient(50rem 35rem at 110% 10%, rgba(61, 220, 151, 0.06), transparent 55%);
+  background-attachment: fixed;
+}
+
+::selection {
+  background: var(--color-primary);
+  color: #0a0b10;
+}
+
+/* Slim, quiet scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border-strong) transparent;
+}
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb {
+  background: var(--color-border-strong);
+  border-radius: 999px;
+}
+
+/* Visible keyboard focus everywhere, mouse users unaffected */
+:focus-visible {
+  outline: 2px solid var(--color-primary-soft);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Signature "system window" chamfered panel — used sparingly on hero panels */
+.panel-cut {
+  clip-path: polygon(
+    0 12px, 12px 0,
+    calc(100% - 12px) 0, 100% 12px,
+    100% calc(100% - 12px), calc(100% - 12px) 100%,
+    12px 100%, 0 calc(100% - 12px)
+  );
+}
+
+.glass {
+  background: rgba(23, 25, 40, 0.55);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.text-balance {
+  text-wrap: balance;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@keyframes xp-fill {
+  from { width: var(--xp-from, 0%); }
+  to { width: var(--xp-to, 0%); }
+}
+
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes level-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(140, 124, 255, 0.55); }
+  70% { box-shadow: 0 0 0 22px rgba(140, 124, 255, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(140, 124, 255, 0); }
+}
+
+.animate-rise-in {
+  animation: rise-in 0.45s ease-out both;
+}
+.animate-level-pulse {
+  animation: level-pulse 1.6s ease-out 2;
+}

@@ -1,0 +1,31 @@
+CODEQUEST — TODO
+================================================================================
+MVP is feature-complete. Everything below is optional follow-up, not a gap
+in what was asked for. See work-done.txt for the full build history.
+
+NICE-TO-HAVE / DEFERRED (do not build unless specifically asked)
+--------------------------------------------------------------------------------
+[ ] Second roadmap track (Frontend, DevOps, etc.) — config already supports
+    multiple tracks (ROADMAP_TRACKS: RoadmapTrack[] in
+    config/roadmaps/backend.ts), just needs content authored.
+[ ] True SVG dependency-line diagram between roadmap nodes — current
+    approach (tier grouping + "Requires: X, Y" + "Unlocks next" text) was a
+    deliberate scope cut, not an oversight.
+[ ] Cmd+K command palette instead of the current topbar search input+dropdown.
+[ ] Real charting library (recharts etc.) for XP history — the plain CSS-bar
+    version in components/statistics/XPHistoryChart.tsx covers the MVP need
+    without adding a dependency.
+[ ] Proper-case display names for free-text skill tags that aren't in
+    config/skills.ts's SKILL_DEFS (currently render lowercase/sanitized).
+[ ] Live end-to-end test against a real Gemini API key — only shape/contract
+    tested so far, no key available in the dev sandbox this was built in.
+
+IF YOU'RE PICKING THIS PROJECT UP
+--------------------------------------------------------------------------------
+Read AGENTS.md first (the "rules that matter most" section). Then
+work-done.txt for what exists and why. This file is intentionally short now
+— there's no known-broken or half-finished feature to track.
+
+Before shipping any change: `npx eslint .`, `npx tsc --noEmit`, `npm run
+build` should all stay clean — that's been true at every checkpoint through
+Pass 6 and is the bar to keep clearing.

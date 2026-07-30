@@ -1,0 +1,268 @@
+CODEQUEST — WORK DONE LOG
+================================================================================
+Update this file after every major implementation pass. Newest entry on top.
+
+================================================================================
+PASS 6 — 2026-07-30 (final pass, MVP complete)
+================================================================================
+
+FEATURES COMPLETED THIS PASS
+- Statistics page (/statistics): summary stat row, 14-day XP history (plain
+  CSS bars, no charting dependency), auto-generated learning-summary
+  paragraph, full skill breakdown table (all skills, not just top 6).
+- Achievements page (/achievements): every ACHIEVEMENT_DEFS entry rendered,
+  locked vs unlocked visual state, unlock date, in-progress fraction (e.g.
+  "3/5") for locked ones.
+- Achievements refactored to a declarative condition schema
+  (AchievementCondition in config/achievements.ts) so unlock-checking and
+  progress-display share exactly one evaluateCondition() — was about to
+  duplicate threshold numbers across two functions; fixed before it shipped.
+- Settings page (/settings): change username, export/import LocalStorage
+  JSON (with validation + error state on bad import), clear notes, reset
+  achievements (new resetAchievementsAction, isolated from a full reset),
+  reset all progress — all with confirm dialogs.
+- "Edit project" wired up for real (was dead code before this pass):
+  failed submissions can now be edited in place (name/description/repo/
+  skills) before retrying, using the updateProjectFieldsAction that already
+  existed but had no UI calling it.
+- Mobile search fixed: GlobalSearch was completely inaccessible below the
+  `sm` breakpoint (hidden with no alternative). TopBar now shows a search
+  icon that opens the same GlobalSearch inline on mobile.
+- Fixed a real WCAG AA contrast failure: --color-text-faint measured as low
+  as 2.59:1 against surface-2 (needs 4.5:1 for normal text; this app uses it
+  at 10-12px in ~35+ places — timestamps, hints, tags). Recomputed both
+  --color-text-muted and --color-text-faint so both clear 4.5:1+ against
+  every surface color in the app (verified by direct WCAG relative-luminance
+  calculation, not eyeballed).
+- Closed a silent-failure gap: LocalStorage write failures (private
+  browsing, full storage, disabled storage) were only console.error'd.
+  saveState() now reports success/failure; lib/store.ts exposes
+  subscribeSaveError(); a new throttled StorageErrorWatcher (mounted once in
+  the root layout) turns a failed write into an actual toast instead of
+  silent data loss.
+- Added a themed app/not-found.tsx — invalid topic/project ids and unmatched
+  routes previously fell through to Next's unstyled default 404.
+- Dead-code cleanup: removed components/ui/separator.tsx and tabs.tsx
+  (built, never referenced anywhere — confirmed via full-project grep, not
+  guessed), removed an unused `animate-node-unlock` keyframe that was never
+  wired to a real trigger.
+- Added .env.local.example (Gemini key setup was previously undocumented)
+  and a real README.md (replacing create-next-app's default one). Enriched
+  the auto-generated AGENTS.md with project-specific architecture rules for
+  future sessions/agents.
+- Full verification after every change in this pass, not just at the end:
+  `npx eslint .`, `npx tsc --noEmit`, `npm run build` all clean, all 12
+  routes building, both static and dynamic.
+
+FILES CREATED THIS PASS
+- app/(app)/statistics/page.tsx, app/(app)/achievements/page.tsx,
+  app/(app)/settings/page.tsx
+- components/statistics/XPHistoryChart.tsx, SkillTable.tsx
+- components/achievements/AchievementCard.tsx
+- components/system/StorageErrorWatcher.tsx
+- app/not-found.tsx
+- .env.local.example, README.md (rewritten from the create-next-app default)
+
+FILES MODIFIED THIS PASS
+- config/achievements.ts — declarative `condition` field added to every def
+- lib/achievementsEngine.ts — rewritten around evaluateCondition(), added
+  getAchievementProgress()
+- lib/actions.ts — added resetAchievementsAction
+- hooks/useActions.ts — added resetAchievements
+- lib/statsEngine.ts — added getXPHistory
+- components/layout/Sidebar.tsx — added Statistics nav item
+- components/layout/TopBar.tsx — rewritten with a working mobile search toggle
+- components/search/GlobalSearch.tsx — added optional autoFocus prop
+- app/(app)/projects/[id]/page.tsx — added inline edit flow for failed projects
+- app/globals.css — text-muted/text-faint recolored for contrast, removed
+  dead node-unlock keyframe
+- lib/storage.ts — saveState now returns boolean instead of swallowing errors
+- lib/store.ts — added subscribeSaveError + emits on failed writes
+- app/layout.tsx — mounts StorageErrorWatcher inside ToastProvider
+- AGENTS.md — appended project-specific orientation
+
+FILES DELETED THIS PASS
+- components/ui/separator.tsx, components/ui/tabs.tsx (confirmed unused)
+
+KNOWN ISSUES / HONEST LIMITATIONS
+- Gemini path is shape/contract-verified only — no live API key available in
+  this sandbox to test an actual round trip. The offline mock path (default,
+  zero-config) is fully exercised.
+- Unrecognized free-text skill tags (anything typed that isn't in
+  config/skills.ts's SKILL_DEFS) render with a lowercase, sanitized name and
+  a generic color rather than a properly-cased badge — cosmetic only,
+  doesn't affect scoring or XP.
+- See README.md "Known, deliberate scope cuts" for the rest (single roadmap
+  track, no SVG dependency diagram, no command palette).
+
+ESTIMATED OVERALL COMPLETION: ~97% of the MVP as specified. Remaining 3% is
+optional deferred polish listed in todo.txt's NICE-TO-HAVE section, none of
+which was requested as required.
+
+================================================================================
+PASS 5 — 2026-07-29 (later same session)
+================================================================================
+
+FEATURES COMPLETED THIS PASS
+- Topic detail page (/roadmap/[topicId]): theory, resources, related-project
+  CTA (deep-links into the submit form with skills prefilled), skill
+  progress, prerequisites (with status), "unlocks next" list, prev/next
+  topic nav, Mark Complete wired to the real XP engine, notes editor inline.
+- Notes system finished: NoteEditor (autosave debounce + explicit Save +
+  Delete, used on the topic page) and a dedicated /notes page (search across
+  all notes, click-through to the owning topic, delete with confirm).
+- Projects feature complete: /projects (list + empty state), /projects/new
+  (form with tag input, prefill via ?skills=, calls the real AI service),
+  /projects/[id] (pending/failed/reviewed states, full ReviewReport with
+  score breakdown, per-skill ratings, strengths/weaknesses/suggestions, next
+  recommended project, retry-on-failure, delete-with-confirm).
+- hooks/useActions.ts refactored: submitProject and the new retryReview both
+  call one shared runReviewAndApply() instead of duplicating the "call AI ->
+  apply result -> celebrate -> handle failure" sequence.
+- lib/actions.ts gained updateProjectFieldsAction and beginRetryAction.
+- lib/roadmapEngine.ts gained getAdjacentTopics and getUnlocksFor.
+- Fixed a real bug in components/ui/progress.tsx: a custom barClassName
+  (e.g. "bg-success" for score bars) was being merged alongside the default
+  gradient instead of replacing it, so colored score bars would have been
+  invisible under the gradient. Now barClassName fully replaces the default.
+- Fixed a real bug: lucide-react 1.27.0 (installed version) has dropped the
+  `Github` brand icon entirely — swapped for `GitFork` in ProjectCard and
+  ReviewReport.
+- Fixed a real anti-pattern flagged by `eslint-plugin-react-hooks`
+  (react-hooks/set-state-in-effect): NoteEditor no longer resets its state
+  via a useEffect keyed on topicId; the topic page now renders it with
+  `key={topic.id}` so React remounts it (and its state resets) naturally
+  when navigating between topics.
+- Added a justified, targeted eslint-disable for `@next/next/no-page-custom-font`
+  on the Google Fonts <link> tag in app/layout.tsx, with an inline comment
+  explaining why next/font/google isn't used here (see Pass 2 notes).
+- Verified clean: `npx eslint .`, `npx tsc --noEmit`, and `npm run build` all
+  pass with zero warnings/errors. Build routes now: / , /dashboard , /notes ,
+  /projects , /projects/new , /projects/[id] , /roadmap , /roadmap/[topicId] ,
+  /api/review.
+
+FILES CREATED THIS PASS
+- app/(app)/roadmap/[topicId]/page.tsx
+- components/topic/NoteEditor.tsx, ResourceList.tsx, PrerequisiteList.tsx
+- app/(app)/notes/page.tsx
+- app/(app)/projects/page.tsx, projects/new/page.tsx, projects/[id]/page.tsx
+- components/projects/SkillTagInput.tsx, ScoreBar.tsx, ProjectCard.tsx,
+  ReviewReport.tsx
+
+FILES MODIFIED THIS PASS
+- lib/actions.ts — added updateProjectFieldsAction, beginRetryAction
+- lib/roadmapEngine.ts — added getAdjacentTopics, getUnlocksFor
+- hooks/useActions.ts — rewritten around shared runReviewAndApply
+- components/ui/progress.tsx — barClassName bug fix (see above)
+- components/projects/ProjectCard.tsx, ReviewReport.tsx — Github -> GitFork
+- components/topic/NoteEditor.tsx — removed setState-in-effect
+- app/(app)/roadmap/[topicId]/page.tsx — added key={topic.id} on NoteEditor
+- app/layout.tsx — justified eslint-disable for the font <link>
+
+KNOWN ISSUES
+- None blocking. Same Gemini-live-key caveat as Pass 4 (shape-verified only,
+  no live key in this sandbox).
+
+REMAINING WORK
+- Statistics page (/statistics)
+- Achievements page (/achievements)
+- Settings page (/settings)
+- Final polish pass: responsive check, accessibility check, animation
+  polish, empty/error/loading state audit across every page
+- README + packaging for delivery
+
+ESTIMATED OVERALL COMPLETION: ~70%
+
+================================================================================
+PASS 4 — 2026-07-29
+================================================================================
+
+FEATURES COMPLETED THIS PASS
+- Dashboard fully wired to real state (no placeholder values): hero level/XP/
+  streak/today's-XP, current + upcoming mission, 8-tile stats grid, skill
+  overview, recent notes, recent projects.
+- Roadmap page: tiered layout (tier = dependency depth), collapsible tier
+  sections, search, status filter (locked/unlocked/complete), difficulty
+  filter, locked-topic cards show which prerequisites are still required
+  (dependency visualization), topic cards link to detail pages.
+- Verified with `npx tsc --noEmit` (clean) and a full `npm run build`
+  (succeeds, Turbopack, routes: / , /dashboard , /roadmap , /api/review).
+
+FILES CREATED THIS PASS
+- components/dashboard/RecentNotes.tsx
+- components/dashboard/RecentProjects.tsx
+- app/(app)/dashboard/page.tsx
+- components/roadmap/RoadmapFilters.tsx
+- components/roadmap/TopicNode.tsx
+- components/roadmap/RoadmapTierSection.tsx
+- app/(app)/roadmap/page.tsx
+- work-done.txt, todo.txt (this file and its companion)
+
+FILES MODIFIED THIS PASS
+- lib/roadmapEngine.ts — added getUpcomingTopics(), refactored
+  getNextAvailableTopic() to reuse it instead of duplicating the filter.
+
+KNOWN ISSUES
+- None blocking. Gemini review path is untested against a live API key
+  (no key available in this environment) — verified by contract/shape only.
+  Offline mock provider path is fully functional and is what a fresh clone
+  uses out of the box.
+
+REMAINING WORK (see todo.txt for the live checklist)
+- Topic detail pages (/roadmap/[topicId])
+- Notes management page (/notes)
+- Projects: list, submit, detail/report pages
+- Statistics page (/statistics)
+- Achievements page (/achievements)
+- Settings page (/settings)
+- Final full-app build/lint pass + README
+
+ESTIMATED OVERALL COMPLETION: ~45%
+
+================================================================================
+PASS 3 — earlier in this session
+================================================================================
+- Built app shell: Sidebar (desktop fixed + mobile drawer), TopBar (greeting,
+  global search), (app)/layout.tsx route-group shell with profile guard.
+  Onboarding screen + root page gate.
+  Toast system, Tabs, Modal/ConfirmDialog UI primitives.
+  useAppData/useActions hooks connecting UI to the store + actions layer.
+  Full AI review service layer: types, prompt builder, MockProvider
+  (offline, zero network), GeminiProvider (calls our own /api/review),
+  AIReviewService (fallback orchestration + XP attachment), factory
+  (services/ai/index.ts), and the /api/review route itself (retries,
+  JSON-fence stripping, shape validation, graceful "not configured" state).
+
+================================================================================
+PASS 2 — earlier in this session
+================================================================================
+- Project scaffold (Next.js 16 App Router, TS, Tailwind v4 CSS-first theme).
+- Design tokens in app/globals.css (dark-only "system window" theme, skill
+  color map, chamfered "panel-cut" motif, animation keyframes).
+- Root layout with Google Fonts via <link> tags (next/font/google avoided —
+  its build-time font fetch is blocked by this sandbox's network allowlist;
+  <link> tags fetch client-side in the browser instead, so this also happens
+  to be the safer choice for an end user's own build).
+- Core types (types/index.ts), utils, XP/level engine, skills catalog,
+  achievements catalog + engine, streak engine, backend roadmap config
+  (19 topics / 8 tiers), roadmap query engine, LocalStorage abstraction
+  (storage.ts), external store (store.ts, useSyncExternalStore-based),
+  pure state-transition actions layer (actions.ts).
+- UI primitives: button, card, input, textarea, label, separator, badge,
+  progress (all hand-rolled, no Radix, to keep the sandboxed build robust).
+
+================================================================================
+ARCHITECTURE NOTES (do not re-litigate these without a real bug)
+================================================================================
+- LocalStorage key: "learningApp" (matches spec). Single JSON blob, typed as
+  AppState in types/index.ts.
+- lib/store.ts is the ONLY module that mutates the cached state reference;
+  hooks/useAppData.ts is the ONLY hook components should use to read it.
+- lib/actions.ts holds pure (state) => state transitions. hooks/useActions.ts
+  wraps them with the store setter + toast celebrations. UI components never
+  call lib/actions.ts directly — they go through hooks/useActions.ts.
+- AI: UI/hooks only ever import services/ai/index.ts (getReviewService).
+  Nothing outside services/ai/* knows Gemini exists. XP is always computed by
+  lib/xpEngine.ts from the AI's scores — providers never emit XP themselves.
+- Skill "completion %" formula and the leveling curve are documented inline
+  in lib/roadmapEngine.ts and lib/xpEngine.ts respectively.
