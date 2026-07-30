@@ -104,7 +104,7 @@ export class MockAIProvider implements AIProvider {
       scalability: scoreInRange(rand, 55, 90),
       codeQuality: scoreInRange(rand, 62, 94),
       documentation: scoreInRange(rand, 50, 95),
-      summary: `${request.projectName} looks like a working ${difficulty.toLowerCase()}-level submission. The core flow is functional and the tagged skills are genuinely reflected in the scope, with room to tighten error handling, tests, and documentation. (Offline placeholder review — connect a Gemini API key in .env.local for real AI grading.)`,
+      summary: `${request.projectName} looks like a working ${difficulty.toLowerCase()}-level submission. The core flow is functional and the tagged skills are genuinely reflected in the scope, with room to tighten error handling, tests, and documentation. (Offline placeholder review — add a Gemini API key in Settings for real AI grading.)`,
       nextProject:
         difficulty === "Beginner"
           ? "Build a CRUD API with one related resource, like posts and comments."

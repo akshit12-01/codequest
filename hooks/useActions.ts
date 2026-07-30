@@ -13,6 +13,7 @@ import {
   beginRetryAction,
   updateNoteAction,
   changeUsernameAction,
+  updateSettingsAction,
   clearAllNotesAction,
   resetAchievementsAction,
 } from "@/lib/actions";
@@ -66,6 +67,7 @@ async function runReviewAndApply(
       description: project.description,
       githubUrl: project.githubUrl,
       skillsUsed: project.skillsUsed,
+      geminiApiKey: fallbackState.settings.geminiApiKey,
     });
 
     const latest = getSnapshot() ?? fallbackState;
@@ -139,6 +141,13 @@ export function useActions() {
     toast({ title: "Achievements reset" });
   }, [update, toast]);
 
+  const updateSettings = useCallback(
+    (settings: Partial<AppState["settings"]>) => {
+      update((prev) => updateSettingsAction(prev, settings));
+    },
+    [update]
+  );
+
   const deleteProject = useCallback(
     (projectId: string) => {
       update((prev) => ({
@@ -193,6 +202,7 @@ export function useActions() {
     changeUsername,
     clearAllNotes,
     resetAchievements,
+    updateSettings,
     submitProject,
     retryReview,
     deleteProject,

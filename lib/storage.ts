@@ -43,7 +43,7 @@ export function createDefaultState(username: string): AppState {
       unlockedAt: null,
     })),
     completedTopics: [],
-    settings: { aiProvider: "auto" },
+    settings: { aiProvider: "auto", geminiApiKey: "" },
     dailyProgress: {},
   };
 }

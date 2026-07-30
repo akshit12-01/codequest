@@ -119,6 +119,8 @@ export interface DailyProgressEntry {
 
 export interface AppSettings {
   aiProvider: "auto" | "gemini" | "mock";
+  /** User-provided Gemini API key (Settings page). Never hardcoded, never sent anywhere but our own /api/review route. */
+  geminiApiKey: string;
 }
 
 /** The single object persisted to LocalStorage under one key. */
@@ -152,6 +154,8 @@ export interface AIReviewRequest {
   description: string;
   githubUrl: string;
   skillsUsed: string[];
+  /** The user's own key from Settings, if they've added one. Ignored by the mock provider. */
+  geminiApiKey?: string;
 }
 
 export interface AIReviewService {

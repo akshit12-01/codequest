@@ -234,6 +234,13 @@ export function changeUsernameAction(state: AppState, username: string): AppStat
   return { ...state, username: trimmed };
 }
 
+export function updateSettingsAction(
+  state: AppState,
+  settings: Partial<AppState["settings"]>
+): AppState {
+  return { ...state, settings: { ...state.settings, ...settings } };
+}
+
 export function clearAllNotesAction(state: AppState): AppState {
   return { ...state, notes: {} };
 }

@@ -2,7 +2,18 @@
 
 import { useRef, useState, type FormEvent, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Download, Upload, User, Trash2, ShieldAlert } from "lucide-react";
+import {
+  Download,
+  Upload,
+  User,
+  Trash2,
+  ShieldAlert,
+  KeyRound,
+  Eye,
+  EyeOff,
+  CheckCircle2,
+  AlertTriangle,
+} from "lucide-react";
 import { useAppData } from "@/hooks/useAppData";
 import { useActions } from "@/hooks/useActions";
 import { exportStateAsJSON, parseImportedJSON } from "@/lib/storage";
@@ -40,10 +51,12 @@ function DangerRow({
 
 export default function SettingsPage() {
   const { state, importState, resetProgress } = useAppData();
-  const { changeUsername, clearAllNotes, resetAchievements } = useActions();
+  const { changeUsername, clearAllNotes, resetAchievements, updateSettings } = useActions();
   const router = useRouter();
 
   const [username, setUsername] = useState(state?.username ?? "");
+  const [apiKeyDraft, setApiKeyDraft] = useState(state?.settings.geminiApiKey ?? "");
+  const [showKey, setShowKey] = useState(false);
   const [importError, setImportError] = useState("");
   const [importSuccess, setImportSuccess] = useState(false);
   const [confirmKind, setConfirmKind] = useState<ConfirmKind>(null);
@@ -55,6 +68,16 @@ export default function SettingsPage() {
     e.preventDefault();
     if (username.trim().length < 2) return;
     changeUsername(username);
+  }
+
+  function handleSaveApiKey(e: FormEvent) {
+    e.preventDefault();
+    updateSettings({ geminiApiKey: apiKeyDraft.trim() });
+  }
+
+  function handleRemoveApiKey() {
+    updateSettings({ geminiApiKey: "" });
+    setApiKeyDraft("");
   }
 
   function handleExport() {
@@ -88,6 +111,7 @@ export default function SettingsPage() {
       }
       importState(parsed);
       setUsername(parsed.username);
+      setApiKeyDraft(parsed.settings.geminiApiKey ?? "");
       setImportSuccess(true);
     } catch {
       setImportError(
@@ -104,6 +128,9 @@ export default function SettingsPage() {
       router.replace("/");
     }
   }
+
+  const hasSavedKey = !!state.settings.geminiApiKey;
+  const keyDirty = apiKeyDraft.trim() !== (state.settings.geminiApiKey ?? "");
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -136,6 +163,99 @@ export default function SettingsPage() {
               Save
             </Button>
           </form>
+        </CardContent>
+      </Card>
+
+      <Card className="animate-rise-in">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <KeyRound className="size-4" /> Gemini API key
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-xs text-text-muted">
+            Add your own key to get real AI-graded project reviews. It&rsquo;s saved only in this
+            browser and sent only to CodeQuest&rsquo;s own review endpoint — never hardcoded,
+            never shared.
+          </p>
+
+          <form onSubmit={handleSaveApiKey} className="space-y-2">
+            <Label htmlFor="gemini-key">API key</Label>
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <Input
+                  id="gemini-key"
+                  type={showKey ? "text" : "password"}
+                  value={apiKeyDraft}
+                  onChange={(e) => setApiKeyDraft(e.target.value)}
+                  placeholder="AIza…"
+                  autoComplete="off"
+                  spellCheck={false}
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowKey((s) => !s)}
+                  aria-label={showKey ? "Hide API key" : "Show API key"}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-faint transition-colors hover:text-text"
+                >
+                  {showKey ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                </button>
+              </div>
+              <Button type="submit" disabled={!keyDirty}>
+                Save
+              </Button>
+            </div>
+          </form>
+
+          {hasSavedKey ? (
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="flex items-center gap-1.5 text-xs text-success">
+                <CheckCircle2 className="size-3.5" /> Key saved — reviews use real Gemini grading.
+              </p>
+              <Button variant="ghost" size="sm" onClick={handleRemoveApiKey}>
+                <Trash2 className="size-3.5" /> Remove key
+              </Button>
+            </div>
+          ) : (
+            <p className="flex items-start gap-1.5 text-xs text-warning">
+              <AlertTriangle className="size-3.5 mt-0.5 shrink-0" />
+              No API key yet — project reviews use a local offline preview reviewer until you add
+              one above.
+            </p>
+          )}
+
+          <details className="rounded-lg border border-border bg-surface-2 p-3 text-xs text-text-muted">
+            <summary className="cursor-pointer select-none font-medium text-text">
+              How do I get a Gemini API key?
+            </summary>
+            <ol className="mt-2 list-decimal space-y-1.5 pl-4">
+              <li>
+                Go to{" "}
+                <a
+                  href="https://aistudio.google.com/apikey"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary-soft hover:underline"
+                >
+                  aistudio.google.com/apikey
+                </a>{" "}
+                and sign in with a Google account.
+              </li>
+              <li>Click <strong className="text-text">Create API key</strong>.</li>
+              <li>
+                Choose a Google Cloud project (or let Google create one for you) — no billing is
+                required for the free tier.
+              </li>
+              <li>Copy the key that appears.</li>
+              <li>Paste it into the field above and click <strong className="text-text">Save</strong>.</li>
+            </ol>
+            <p className="mt-2 text-text-faint">
+              Keys created today are automatically restricted to the Gemini API by Google, so
+              there&rsquo;s no extra setup. If you&rsquo;re reusing a very old key and it stops
+              working, just generate a fresh one.
+            </p>
+          </details>
         </CardContent>
       </Card>
 

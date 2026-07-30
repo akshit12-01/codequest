@@ -86,12 +86,13 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const apiKey = process.env.GEMINI_API_KEY;
+  const providedKey = body.geminiApiKey?.trim() ?? "";
+  const apiKey = providedKey || process.env.GEMINI_API_KEY;
   if (!apiKey) {
     return NextResponse.json({
       ok: false,
       reason: "not_configured",
-      detail: "GEMINI_API_KEY is not set on the server",
+      detail: "No Gemini API key configured. Add one in Settings to enable real AI-graded reviews.",
     });
   }
 
